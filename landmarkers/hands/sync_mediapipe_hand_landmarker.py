@@ -109,7 +109,7 @@ class SyncMediapipeHandLandmarker(Landmarker):
         Returns:
             HandLandmarkerResult: Wrapped result with helper methods.
         """
-        return HandLandmarkerResult(self.detect_raw(frame, timestamp_ms))
+        return HandLandmarkerResult(self.detect_raw(frame, timestamp_ms),21,21)
 
     def close(self):
         """

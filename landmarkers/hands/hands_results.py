@@ -33,8 +33,10 @@ class HandLandmarkerResultProtocol(Protocol):
 
 
 class HandLandmarkerResult:
-	def __init__(self, data: HandLandmarkerResultProtocol):
+	def __init__(self, data: HandLandmarkerResultProtocol, num_landmarks: int, num_world_landmarks: int):
 		self._data = data
+		self._num_landmarks = num_landmarks
+		self._num_world_landmarks = num_world_landmarks
 
 	@property
 	def data(self) -> HandLandmarkerResultProtocol:
@@ -59,13 +61,12 @@ class HandLandmarkerResult:
 		return new_image
 
 	def landmarks_array(self, hand_index: Optional[int] = None) -> np.ndarray:
-		num_landmarks = 21
 		if not self.data.hand_landmarks:
-			return np.zeros((0, num_landmarks, 3), dtype=np.float32)
+			return np.zeros((0, self._num_landmarks, 3), dtype=np.float32)
 
 		if hand_index is not None:
 			if hand_index >= len(self.data.hand_landmarks):
-				return np.zeros((0, num_landmarks, 3), dtype=np.float32)
+				return np.zeros((0, self._num_landmarks, 3), dtype=np.float32)
 			hand = self.data.hand_landmarks[hand_index]
 			return np.array([[lm.x, lm.y, lm.z] for lm in hand], dtype=np.float32)[
 				np.newaxis, :, :
@@ -78,13 +79,12 @@ class HandLandmarkerResult:
 		return result
 
 	def world_landmarks_array(self, hand_index: Optional[int] = None) -> np.ndarray:
-		num_landmarks = 21
 		if not self.data.hand_world_landmarks:
-			return np.zeros((0, num_landmarks, 3), dtype=np.float32)
+			return np.zeros((0, self._num_world_landmarks, 3), dtype=np.float32)
 
 		if hand_index is not None:
 			if hand_index >= len(self.data.hand_world_landmarks):
-				return np.zeros((0, num_landmarks, 3), dtype=np.float32)
+				return np.zeros((0, self._num_world_landmarks, 3), dtype=np.float32)
 			hand = self.data.hand_world_landmarks[hand_index]
 			return np.array([[lm.x, lm.y, lm.z] for lm in hand], dtype=np.float32)[
 				np.newaxis, :, :
@@ -126,6 +126,6 @@ class HandLandmarkerResult:
 		if hand_index is not None:
 			if hand_index >= len(result):
 				return np.zeros((0, 3), dtype=np.float32)
-			return result[np.newaxis, hand_index, :]
+			return result[hand_index:hand_index+1, :]
 
 		return result

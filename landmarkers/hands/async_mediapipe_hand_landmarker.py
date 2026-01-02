@@ -188,5 +188,5 @@ class WrappedStreamMediapipeLandmarker(
 		Wrap the raw MediaPipe result in `HandLandmarkerResult` before
 		calling the user callback.
 		"""
-		wrapped = HandLandmarkerResult(raw_result)
+		wrapped = HandLandmarkerResult(raw_result,21,21)
 		self._result_callback(wrapped, mp_image, timestamp_ms)
