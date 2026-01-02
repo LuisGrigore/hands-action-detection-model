@@ -36,8 +36,8 @@ class HandLandmarkerResult:
 	def __init__(
 		self,
 		data: HandLandmarkerResultProtocol,
-		num_landmarks: int,
-		num_world_landmarks: int,
+		num_landmarks: int = 21,
+		num_world_landmarks: int = 21,
 	):
 		self._data = data
 		self._num_landmarks = num_landmarks
@@ -53,13 +53,7 @@ class HandLandmarkerResult:
 
 	def draw(self, image: ImageArray, hand_index: Optional[int] = None) -> ImageArray:
 		new_image = image.copy()
-		if hand_index is not None:
-			if hand_index < 0 or hand_index >= len(self.data.hand_landmarks):
-				hands = []
-			else:
-				hands = [self.data.hand_landmarks[hand_index]]
-		else:
-			hands = self.data.hand_landmarks
+		hands = self._select_hands(self.data.hand_landmarks, hand_index)
 
 		for hand in hands:
 			for lm in hand:
@@ -69,46 +63,45 @@ class HandLandmarkerResult:
 		return new_image
 
 	def _pad_or_truncate(self, landmarks: Sequence[Landmark], n: int) -> np.ndarray:
-		arr = np.zeros((n, 3), dtype=np.float32)
-		length = min(len(landmarks), n)
-		for i in range(length):
-			arr[i, 0] = landmarks[i].x
-			arr[i, 1] = landmarks[i].y
-			arr[i, 2] = landmarks[i].z
-		return arr
+		arr = np.array([[lm.x, lm.y, lm.z] for lm in landmarks], dtype=np.float32)
+		result = np.zeros((n, 3), dtype=np.float32)
+		length = min(len(arr), n)
+		result[:length, :] = arr[:length, :]
+		return result
+
+	def _get_landmarks_array(
+		self,
+		landmarks_source: Sequence[LandmarkList],
+		n_landmarks: int,
+		hand_index: Optional[int] = None,
+	) -> np.ndarray:
+		hands = self._select_hands(landmarks_source, hand_index)
+		if not hands:
+			return np.zeros((0, n_landmarks, 3), dtype=np.float32)
+		return np.stack(
+			[self._pad_or_truncate(hand, n_landmarks) for hand in hands], axis=0
+		)
+
+	def _select_hands(
+		self, hands_source: Sequence[LandmarkList], hand_index: Optional[int]
+	) -> Sequence[LandmarkList]:
+		if not hands_source:
+			return []
+		if hand_index is not None:
+			if 0 <= hand_index < len(hands_source):
+				return [hands_source[hand_index]]
+			return []
+		return list(hands_source) if isinstance(hands_source, tuple) else hands_source
 
 	def landmarks_array(self, hand_index: Optional[int] = None) -> np.ndarray:
-		if not self.data.hand_landmarks:
-			return np.zeros((0, self._num_landmarks, 3), dtype=np.float32)
-
-		hands = (
-			[self.data.hand_landmarks[hand_index]]
-			if hand_index is not None
-			and 0 <= hand_index < len(self.data.hand_landmarks)
-			else self.data.hand_landmarks
+		return self._get_landmarks_array(
+			self.data.hand_landmarks, self._num_landmarks, hand_index
 		)
-
-		result = np.stack(
-			[self._pad_or_truncate(hand, self._num_landmarks) for hand in hands], axis=0
-		)
-		return result
 
 	def world_landmarks_array(self, hand_index: Optional[int] = None) -> np.ndarray:
-		if not self.data.hand_world_landmarks:
-			return np.zeros((0, self._num_world_landmarks, 3), dtype=np.float32)
-
-		hands = (
-			[self.data.hand_world_landmarks[hand_index]]
-			if hand_index is not None
-			and 0 <= hand_index < len(self.data.hand_world_landmarks)
-			else self.data.hand_world_landmarks
+		return self._get_landmarks_array(
+			self.data.hand_world_landmarks, self._num_world_landmarks, hand_index
 		)
-
-		result = np.stack(
-			[self._pad_or_truncate(hand, self._num_world_landmarks) for hand in hands],
-			axis=0,
-		)
-		return result
 
 	def landmarks_array_relative_to_wrist(
 		self, hand_index: Optional[int] = None
@@ -134,8 +127,8 @@ class HandLandmarkerResult:
 		)
 
 		if hand_index is not None:
-			if hand_index >= len(result):
-				return np.zeros((0, 3), dtype=np.float32)
-			return result[hand_index : hand_index + 1, :]
+			if 0 <= hand_index < len(result):
+				return result[hand_index : hand_index + 1, :]
+			return np.zeros((0, 3), dtype=np.float32)
 
 		return result
