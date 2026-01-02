@@ -1,0 +1,161 @@
+# class HandLandmarkerResult:
+#     def __init__(self, data: HandLandmarkerResultProtocol):
+#         self._data = data
+
+#     @property
+#     def data(self) -> HandLandmarkerResultProtocol:
+#         return self._data
+
+#     @property
+#     def hands_count(self) -> int:
+#         return len(self.data.hand_landmarks)
+
+#     def draw(self, image: ImageArray, hand_index: Optional[int] = None) -> ImageArray:
+#         new_image = image.copy()
+#         hands = (
+#             [self.data.hand_landmarks[hand_index]]
+#             if hand_index is not None
+#             else self.data.hand_landmarks
+#         )
+#         for hand in hands:
+#             for lm in hand:
+#                 h, w, _ = new_image.shape
+#                 cx, cy = int(lm.x * w), int(lm.y * h)
+#                 cv2.circle(new_image, (cx, cy), 4, (0, 255, 0), -1)
+#         return new_image
+
+#     def landmarks_array(self, hand_index: Optional[int] = None) -> Optional[Union[np.ndarray, list[np.ndarray]]]:
+#         if not self.data.hand_landmarks:
+#             return None
+#         hands = (
+#             [self.data.hand_landmarks[hand_index]]
+#             if hand_index is not None
+#             else self.data.hand_landmarks
+#         )
+#         result = [
+#             np.array([[lm.x, lm.y, lm.z] for lm in hand], dtype=np.float32)
+#             for hand in hands
+#         ]
+#         return result[0] if hand_index is not None else result
+
+#     def world_landmarks_array(self, hand_index: Optional[int] = None) -> Optional[Union[np.ndarray, list[np.ndarray]]]:
+#         if not self.data.hand_world_landmarks:
+#             return None
+#         hands = (
+#             [self.data.hand_world_landmarks[hand_index]]
+#             if hand_index is not None
+#             else self.data.hand_world_landmarks
+#         )
+#         result = [
+#             np.array([[lm.x, lm.y, lm.z] for lm in hand], dtype=np.float32)
+#             for hand in hands
+#         ]
+#         return result[0] if hand_index is not None else result
+
+#     def landmarks_array_relative_to_wrist(self, hand_index: Optional[int] = None) -> Optional[Union[np.ndarray, list[np.ndarray]]]:
+#         landmarks_list = self.landmarks_array(hand_index)
+#         if landmarks_list is None:
+#             return None
+#         if isinstance(landmarks_list, np.ndarray):
+#             return landmarks_list - landmarks_list[0]
+#         return [hand - hand[0] for hand in landmarks_list]
+
+#     def handedness(self, hand_index: Optional[int] = None) -> Optional[Union[tuple[int, float, str], list[tuple[int, float, str]]]]:
+#         if not self.data.handedness:
+#             return None
+#         hands = [hand[0] for hand in self.data.handedness if hand and len(hand) > 0]
+#         result = [(hand.index, hand.score, hand.category_name) for hand in hands]
+#         if hand_index is not None:
+#             if len(result) > 0:
+#                 return result[0]
+#             return None
+#         return result
+
+
+# class HandLandmarkerResult:
+#     def __init__(self, data: HandLandmarkerResultProtocol):
+#         self._data = data
+
+#     @property
+#     def data(self) -> HandLandmarkerResultProtocol:
+#         return self._data
+
+#     @property
+#     def hands_count(self) -> int:
+#         return len(self.data.hand_landmarks)
+
+#     def draw(self, image: ImageArray, hand_index: Optional[int] = None) -> ImageArray:
+#         new_image = image.copy()
+
+#         if hand_index is not None:
+#             hands = [self.data.hand_landmarks[hand_index]]
+#         else:
+#             hands = self.data.hand_landmarks
+
+#         for hand in hands:
+#             for lm in hand:
+#                 h, w, _ = new_image.shape
+#                 cx, cy = int(lm.x * w), int(lm.y * h)
+#                 cv2.circle(new_image, (cx, cy), 4, (0, 255, 0), -1)
+
+#         return new_image
+
+#     def landmarks_array(
+#         self, hand_index: Optional[int] = None
+#     ) -> Optional[Union[np.ndarray, list[np.ndarray]]]:
+#         if not self.data.hand_landmarks:
+#             return None
+
+#         if hand_index is not None:
+#             hand = self.data.hand_landmarks[hand_index]
+#             return np.array([[lm.x, lm.y, lm.z] for lm in hand], dtype=np.float32)
+
+#         return [
+#             np.array([[lm.x, lm.y, lm.z] for lm in hand], dtype=np.float32)
+#             for hand in self.data.hand_landmarks
+#         ]
+
+#     def world_landmarks_array(
+#         self, hand_index: Optional[int] = None
+#     ) -> Optional[Union[np.ndarray, list[np.ndarray]]]:
+#         if not self.data.hand_world_landmarks:
+#             return None
+
+#         if hand_index is not None:
+#             hand = self.data.hand_world_landmarks[hand_index]
+#             return np.array([[lm.x, lm.y, lm.z] for lm in hand], dtype=np.float32)
+
+#         return [
+#             np.array([[lm.x, lm.y, lm.z] for lm in hand], dtype=np.float32)
+#             for hand in self.data.hand_world_landmarks
+#         ]
+
+#     def landmarks_array_relative_to_wrist(
+#         self, hand_index: Optional[int] = None
+#     ) -> Optional[Union[np.ndarray, list[np.ndarray]]]:
+#         landmarks = self.landmarks_array(hand_index)
+#         if landmarks is None:
+#             return None
+
+#         if isinstance(landmarks, np.ndarray):
+#             return landmarks - landmarks[0]
+
+#         return [hand - hand[0] for hand in landmarks]
+
+#     def handedness(
+#         self, hand_index: Optional[int] = None
+#     ) -> Optional[Union[tuple[int, float, str], list[tuple[int, float, str]]]]:
+#         if not self.data.handedness:
+#             return None
+
+#         hands_info = [
+#             hand[0] for hand in self.data.handedness if hand and len(hand) > 0
+#         ]
+#         result = [(hand.index, hand.score, hand.category_name) for hand in hands_info]
+
+#         if hand_index is not None:
+#             if hand_index < len(result):
+#                 return result[hand_index]
+#             return None
+
+#         return result
