@@ -1,5 +1,6 @@
+from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Callable, Optional
+from typing import Callable, Generic, Optional, TypeVar, Union
 
 import mediapipe as mp
 
@@ -18,8 +19,8 @@ class MediapipeHandLandmarkerRunningMode(Enum):
     Defines the running mode for the synchronous hand landmarker.
 
     Attributes:
-            IMAGE: Single image processing.
-            VIDEO: Continuous video processing with timestamp support.
+        IMAGE: Single image processing.
+        VIDEO: Continuous video processing with timestamp support.
     """
 
     IMAGE = VisionRunningMode.IMAGE
@@ -34,18 +35,18 @@ class SyncMediapipeHandLandmarker(Landmarker):
     a HandLandmarkerResult containing landmarks, handedness, and helper methods.
 
     Args:
-            model_path (str): Path to the hand_landmarker.task model file.
-            running_mode (MediapipeHandLandmarkerRunningMode): IMAGE or VIDEO mode.
-            num_hands (int): Maximum number of hands to detect.
-            min_detection_confidence (float): Minimum confidence for detection.
-            min_presence_confidence (float): Minimum confidence for hand presence.
-            min_tracking_confidence (float): Minimum confidence for tracking.
+        model_path (str): Path to the hand_landmarker.task model file.
+        running_mode (MediapipeHandLandmarkerRunningMode): IMAGE or VIDEO mode.
+        num_hands (int): Maximum number of hands to detect.
+        min_detection_confidence (float): Minimum confidence for detection.
+        min_presence_confidence (float): Minimum confidence for hand presence.
+        min_tracking_confidence (float): Minimum confidence for tracking.
 
     Example:
-            >>> detector = MediapipeHandLandmarker("hand_landmarker.task",
-                                                                                       running_mode=MediapipeHandLandmarkerRunningMode.IMAGE)
-            >>> result = detector.detect(frame)
-            >>> image_with_landmarks = result.draw(frame)
+        >>> detector = MediapipeHandLandmarker("hand_landmarker.task",
+           running_mode=MediapipeHandLandmarkerRunningMode.IMAGE)
+        >>> result = detector.detect(frame)
+        >>> image_with_landmarks = result.draw(frame)
     """
 
     def __init__(
@@ -75,15 +76,15 @@ class SyncMediapipeHandLandmarker(Landmarker):
         Detect hand landmarks on a single frame without wrapping results.
 
         Args:
-                frame (ImageArray): RGB image as numpy array.
-                timestamp_ms (Optional[TimestampMs]): Required for VIDEO mode.
+            frame (ImageArray): RGB image as numpy array.
+            timestamp_ms (Optional[TimestampMs]): Required for VIDEO mode.
 
         Returns:
-                HandLandmarkerResultProtocol: Raw MediaPipe result.
+            HandLandmarkerResultProtocol: Raw MediaPipe result.
 
         Raises:
-                RuntimeError: If the detector has been closed.
-                ValueError: If timestamp_ms is missing in VIDEO mode.
+            RuntimeError: If the detector has been closed.
+            ValueError: If timestamp_ms is missing in VIDEO mode.
         """
         if self._landmarker is None:
             raise RuntimeError("Landmarker is closed")
@@ -103,11 +104,11 @@ class SyncMediapipeHandLandmarker(Landmarker):
         Detect hand landmarks and return a HandLandmarkerResult wrapper.
 
         Args:
-                frame (ImageArray): RGB image as numpy array.
-                timestamp_ms (Optional[TimestampMs]): Required for VIDEO mode.
+            frame (ImageArray): RGB image as numpy array.
+            timestamp_ms (Optional[TimestampMs]): Required for VIDEO mode.
 
         Returns:
-                HandLandmarkerResult: Wrapped result with helper methods.
+            HandLandmarkerResult: Wrapped result with helper methods.
         """
         return HandLandmarkerResult(self.detect_raw(frame, timestamp_ms))
 
@@ -120,7 +121,13 @@ class SyncMediapipeHandLandmarker(Landmarker):
             self._landmarker = None
 
 
-class StreamMediapipeHandLandmarker(Landmarker):
+RawCallback = Callable[[HandLandmarkerResultProtocol, mp.Image, TimestampMs], None]
+WrappedCallback = Callable[[HandLandmarkerResult, mp.Image, TimestampMs], None]
+
+CallbackType = TypeVar("CallbackType", WrappedCallback, RawCallback)
+
+
+class AbstractStreamMediapipeHandLandmarker(Landmarker, ABC, Generic[CallbackType]):
     """
     Asynchronous MediaPipe Hand Landmarker for LIVE_STREAM mode.
 
@@ -128,25 +135,25 @@ class StreamMediapipeHandLandmarker(Landmarker):
     via a callback function provided at initialization.
 
     Args:
-            model_path (str): Path to the hand_landmarker.task model file.
-            result_callback (Callable): Function called on each processed frame.
-                    Signature: (HandLandmarkerResult, mp.Image, TimestampMs) -> None
-            num_hands (int): Maximum number of hands to detect.
-            min_detection_confidence (float): Minimum confidence for detection.
-            min_presence_confidence (float): Minimum confidence for hand presence.
-            min_tracking_confidence (float): Minimum confidence for tracking.
+        model_path (str): Path to the hand_landmarker.task model file.
+        result_callback (Callable): Function called on each processed frame.
+        Signature: (HandLandmarkerResult, mp.Image, TimestampMs) -> None
+        num_hands (int): Maximum number of hands to detect.
+        min_detection_confidence (float): Minimum confidence for detection.
+        min_presence_confidence (float): Minimum confidence for hand presence.
+        min_tracking_confidence (float): Minimum confidence for tracking.
 
     Example:
-            >>> def callback(result, image, ts):
-            ...     print("Detected hands:", len(result.hands))
-            >>> detector = MediapipeHandLandmarkerStream("hand_landmarker.task", callback)
-            >>> detector.send(frame, timestamp_ms)
+        >>> def callback(result, image, ts):
+        ...     print("Detected hands:", len(result.hands))
+        >>> detector = MediapipeHandLandmarkerStream("hand_landmarker.task", callback)
+        >>> detector.send(frame, timestamp_ms)
     """
 
     def __init__(
         self,
         model_path: str,
-        result_callback: Callable[[HandLandmarkerResult, mp.Image, TimestampMs], None],
+        result_callback: CallbackType,
         num_hands: int = 1,
         min_detection_confidence: float = 0.6,
         min_presence_confidence: float = 0.6,
@@ -154,15 +161,7 @@ class StreamMediapipeHandLandmarker(Landmarker):
     ) -> None:
         if result_callback is None:
             raise ValueError("result_callback is required for LIVE_STREAM mode")
-
-        def _internal_callback(
-            raw_result: HandLandmarkerResultProtocol,
-            mp_image: mp.Image,
-            timestamp_ms: int,
-        ):
-            wrapped = HandLandmarkerResult(raw_result)
-            result_callback(wrapped, mp_image, timestamp_ms)
-
+        self._result_callback = result_callback
         options = HandLandmarkerOptions(
             base_options=BaseOptions(model_asset_path=model_path),
             running_mode=VisionRunningMode.LIVE_STREAM,
@@ -170,21 +169,30 @@ class StreamMediapipeHandLandmarker(Landmarker):
             min_hand_detection_confidence=min_detection_confidence,
             min_hand_presence_confidence=min_presence_confidence,
             min_tracking_confidence=min_tracking_confidence,
-            result_callback=_internal_callback,
+            result_callback=self._internal_callback,
         )
 
         self._landmarker = HandLandmarker.create_from_options(options)
+
+    @abstractmethod
+    def _internal_callback(
+        self,
+        raw_result: HandLandmarkerResultProtocol,
+        mp_image: mp.Image,
+        timestamp_ms: int,
+    ):
+        pass
 
     def send(self, frame: ImageArray, timestamp_ms: TimestampMs) -> None:
         """
         Send a frame for asynchronous processing.
 
         Args:
-                frame (ImageArray): RGB image as numpy array.
-                timestamp_ms (TimestampMs): Timestamp in milliseconds.
+            frame (ImageArray): RGB image as numpy array.
+            timestamp_ms (TimestampMs): Timestamp in milliseconds.
 
         Raises:
-                RuntimeError: If the detector has been closed.
+            RuntimeError: If the detector has been closed.
         """
         if self._landmarker is None:
             raise RuntimeError("Landmarker is closed")
@@ -198,3 +206,62 @@ class StreamMediapipeHandLandmarker(Landmarker):
         if self._landmarker:
             self._landmarker.close()
             self._landmarker = None
+
+
+class RawStreamMediapipeLandmarker(AbstractStreamMediapipeHandLandmarker[RawCallback]):
+    def __init__(
+        self,
+        model_path: str,
+        result_callback: RawCallback,
+        num_hands: int = 1,
+        min_detection_confidence: float = 0.6,
+        min_presence_confidence: float = 0.6,
+        min_tracking_confidence: float = 0.6,
+    ) -> None:
+        super().__init__(
+            model_path,
+            result_callback,
+            num_hands,
+            min_detection_confidence,
+            min_presence_confidence,
+            min_tracking_confidence,
+        )
+
+    def _internal_callback(
+        self,
+        raw_result: HandLandmarkerResultProtocol,
+        mp_image: mp.Image,
+        timestamp_ms: int,
+    ):
+        self._result_callback(raw_result, mp_image, timestamp_ms)
+
+
+class WrappedStreamMediapipeLandmarker(
+    AbstractStreamMediapipeHandLandmarker[WrappedCallback]
+):
+    def __init__(
+        self,
+        model_path: str,
+        result_callback: WrappedCallback,
+        num_hands: int = 1,
+        min_detection_confidence: float = 0.6,
+        min_presence_confidence: float = 0.6,
+        min_tracking_confidence: float = 0.6,
+    ) -> None:
+        super().__init__(
+            model_path,
+            result_callback,
+            num_hands,
+            min_detection_confidence,
+            min_presence_confidence,
+            min_tracking_confidence,
+        )
+
+    def _internal_callback(
+        self,
+        raw_result: HandLandmarkerResultProtocol,
+        mp_image: mp.Image,
+        timestamp_ms: int,
+    ):
+        wrapped = HandLandmarkerResult(raw_result)
+        self._result_callback(wrapped, mp_image, timestamp_ms)
