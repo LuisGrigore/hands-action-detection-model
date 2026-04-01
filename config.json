@@ -1,66 +1,39 @@
 {
+  "common": {
+    "actions": ["A", "B", "C", "D", "E", "none"],
+    "sequence_length": 20,
+    "data_path": "./dataset"
+  },
   "collect_data": {
-    "actions": [
-      "grab",
-      "release",
-      "turpinch",
-      "unpinch",
-      "screw",
-      "none"
-    ],
-    "sequence_length": 10,
-    "n_sequences": 15,
-    "data_path": "./dataset",
+    "n_sequences": 5,
     "num_landmarks": 21,
-    "countdown": 3,
+    "countdown": 2,
     "model_path": "hand_landmarker.task",
     "num_hands": 2,
     "window_width": 1080,
     "window_height": 920
   },
   "create_dataset": {
-    "actions": [
-      "grab",
-      "release",
-      "turpinch",
-      "unpinch",
-      "screw",
-      "none"
-    ],
-    "sequence_length": 10,
-    "data_path": "./dataset",
     "output_path": "hand_gesture_dataset.npz",
     "augmentation_counts": {
-      "grab": 30,
-      "release": 30,
-      "turpinch": 30,
-      "unpinch": 30,
-      "screw": 30,
-      "none": 60
+      "A": 50,
+      "B": 50,
+      "C": 50,
+      "D": 50,
+      "E": 50,
+      "none": 50
     },
     "augmentation": {
       "noise_std": 0.01,
-      "scale_range": [
-        0.9,
-        1.1
-      ],
+      "scale_range": [0.9, 1.1],
       "dropout_prob": 0.3,
       "temporal_prob": 0.5
     }
   },
   "train_model": {
-    "actions": [
-      "grab",
-      "release",
-      "turpinch",
-      "unpinch",
-      "screw",
-      "none"
-    ],
-    "sequence_length": 10,
     "dataset_path": "hand_gesture_dataset.npz",
     "model_export_name": "hand_gesture_model.h5",
-    "hand_selection": "right",
+    "hand_selection": "both",
     "model_architecture": {
       "type": "sequential",
       "layers": [
@@ -76,8 +49,16 @@
         {
           "type": "GRU",
           "units": 64,
+          "return_sequences": true
+        },
+
+        {
+          "type": "GRU",
+          "units": 64,
           "return_sequences": false
         },
+
+
         {
           "type": "Dense",
           "units": 32,
@@ -90,14 +71,12 @@
       ]
     },
     "training": {
-      "epochs": 100,
-      "batch_size": 16,
+      "epochs": 15,
+      "batch_size": 8,
       "validation_split": 0.2,
       "optimizer": "adam",
       "loss": "categorical_crossentropy",
-      "metrics": [
-        "accuracy"
-      ]
+      "metrics": ["accuracy"]
     },
     "data_split": {
       "test_size": 0.15,
