@@ -1,0 +1,107 @@
+{
+  "collect_data": {
+    "actions": [
+      "grab",
+      "release",
+      "turpinch",
+      "unpinch",
+      "screw",
+      "none"
+    ],
+    "sequence_length": 10,
+    "n_sequences": 15,
+    "data_path": "./dataset",
+    "num_landmarks": 21,
+    "countdown": 3,
+    "model_path": "hand_landmarker.task",
+    "num_hands": 2,
+    "window_width": 1080,
+    "window_height": 920
+  },
+  "create_dataset": {
+    "actions": [
+      "grab",
+      "release",
+      "turpinch",
+      "unpinch",
+      "screw",
+      "none"
+    ],
+    "sequence_length": 10,
+    "data_path": "./dataset",
+    "output_path": "hand_gesture_dataset.npz",
+    "augmentation_counts": {
+      "grab": 30,
+      "release": 30,
+      "turpinch": 30,
+      "unpinch": 30,
+      "screw": 30,
+      "none": 60
+    },
+    "augmentation": {
+      "noise_std": 0.01,
+      "scale_range": [
+        0.9,
+        1.1
+      ],
+      "dropout_prob": 0.3,
+      "temporal_prob": 0.5
+    }
+  },
+  "train_model": {
+    "actions": [
+      "grab",
+      "release",
+      "turpinch",
+      "unpinch",
+      "screw",
+      "none"
+    ],
+    "sequence_length": 10,
+    "dataset_path": "hand_gesture_dataset.npz",
+    "model_export_name": "hand_gesture_model.h5",
+    "hand_selection": "right",
+    "model_architecture": {
+      "type": "sequential",
+      "layers": [
+        {
+          "type": "TimeDistributed_Dense",
+          "units": 64,
+          "activation": "relu"
+        },
+        {
+          "type": "Dropout",
+          "rate": 0.3
+        },
+        {
+          "type": "GRU",
+          "units": 64,
+          "return_sequences": false
+        },
+        {
+          "type": "Dense",
+          "units": 32,
+          "activation": "relu"
+        },
+        {
+          "type": "Dense",
+          "activation": "softmax"
+        }
+      ]
+    },
+    "training": {
+      "epochs": 100,
+      "batch_size": 16,
+      "validation_split": 0.2,
+      "optimizer": "adam",
+      "loss": "categorical_crossentropy",
+      "metrics": [
+        "accuracy"
+      ]
+    },
+    "data_split": {
+      "test_size": 0.15,
+      "stratify": true
+    }
+  }
+}
