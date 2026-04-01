@@ -33,7 +33,7 @@
   "train_model": {
     "dataset_path": "hand_gesture_dataset.npz",
     "model_export_name": "hand_gesture_model.h5",
-    "hand_selection": "both",
+    "hand_selection": "right",
     "model_architecture": {
       "type": "sequential",
       "layers": [
