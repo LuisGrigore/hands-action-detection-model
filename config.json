@@ -1,86 +1,107 @@
 {
-  "common": {
-    "actions": ["A", "B", "C", "D", "E", "none"],
-    "sequence_length": 20,
-    "data_path": "./dataset"
-  },
-  "collect_data": {
-    "n_sequences": 5,
-    "num_landmarks": 21,
-    "countdown": 2,
-    "model_path": "hand_landmarker.task",
-    "num_hands": 2,
-    "window_width": 1080,
-    "window_height": 920
-  },
-  "create_dataset": {
-    "output_path": "hand_gesture_dataset.npz",
-    "augmentation_counts": {
-      "A": 50,
-      "B": 50,
-      "C": 50,
-      "D": 50,
-      "E": 50,
-      "none": 50
-    },
-    "augmentation": {
-      "noise_std": 0.01,
-      "scale_range": [0.9, 1.1],
-      "dropout_prob": 0.3,
-      "temporal_prob": 0.5
-    }
-  },
-  "train_model": {
-    "dataset_path": "hand_gesture_dataset.npz",
-    "model_export_name": "hand_gesture_model.h5",
-    "hand_selection": "right",
-    "model_architecture": {
-      "type": "sequential",
-      "layers": [
-        {
-          "type": "TimeDistributed_Dense",
-          "units": 64,
-          "activation": "relu"
-        },
-        {
-          "type": "Dropout",
-          "rate": 0.3
-        },
-        {
-          "type": "GRU",
-          "units": 64,
-          "return_sequences": true
-        },
-
-        {
-          "type": "GRU",
-          "units": 64,
-          "return_sequences": false
-        },
-
-
-        {
-          "type": "Dense",
-          "units": 32,
-          "activation": "relu"
-        },
-        {
-          "type": "Dense",
-          "activation": "softmax"
-        }
-      ]
-    },
-    "training": {
-      "epochs": 15,
-      "batch_size": 8,
-      "validation_split": 0.2,
-      "optimizer": "adam",
-      "loss": "categorical_crossentropy",
-      "metrics": ["accuracy"]
-    },
-    "data_split": {
-      "test_size": 0.15,
-      "stratify": true
-    }
-  }
+	"common": {
+		"actions": [
+			"A",
+			"B",
+			"C",
+			"D",
+			"E",
+			"F",
+			"G",
+			"H",
+			"I",
+			"J",
+			"K",
+			"none"
+		],
+		"sequence_length": 20,
+		"data_path": "./dataset"
+	},
+	"collect_data": {
+		"n_sequences": 5,
+		"num_landmarks": 21,
+		"countdown": 2,
+		"model_path": "hand_landmarker.task",
+		"num_hands": 2,
+		"window_width": 1080,
+		"window_height": 920
+	},
+	"create_dataset": {
+		"output_path": "hand_gesture_dataset.npz",
+		"augmentation_counts": {
+			"A": 50,
+			"B": 50,
+			"C": 50,
+			"D": 50,
+			"E": 50,
+			"F": 50,
+			"G": 50,
+			"H": 50,
+			"I": 50,
+			"J": 50,
+			"K": 50,
+			"none": 100
+		},
+		"augmentation": {
+			"noise_std": 0.01,
+			"scale_range": [
+				0.9,
+				1.1
+			],
+			"dropout_prob": 0.3,
+			"temporal_prob": 0.5
+		}
+	},
+	"train_model": {
+		"dataset_path": "hand_gesture_dataset.npz",
+		"model_export_name": "hand_gesture_model.h5",
+		"hand_selection": "right",
+		"model_architecture": {
+			"type": "sequential",
+			"layers": [
+				{
+					"type": "TimeDistributed_Dense",
+					"units": 64,
+					"activation": "relu"
+				},
+				{
+					"type": "Dropout",
+					"rate": 0.3
+				},
+				{
+					"type": "GRU",
+					"units": 64,
+					"return_sequences": true
+				},
+				{
+					"type": "GRU",
+					"units": 64,
+					"return_sequences": false
+				},
+				{
+					"type": "Dense",
+					"units": 32,
+					"activation": "relu"
+				},
+				{
+					"type": "Dense",
+					"activation": "softmax"
+				}
+			]
+		},
+		"training": {
+			"epochs": 15,
+			"batch_size": 8,
+			"validation_split": 0.2,
+			"optimizer": "adam",
+			"loss": "categorical_crossentropy",
+			"metrics": [
+				"accuracy"
+			]
+		},
+		"data_split": {
+			"test_size": 0.15,
+			"stratify": true
+		}
+	}
 }
