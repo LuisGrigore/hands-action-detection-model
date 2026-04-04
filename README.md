@@ -36,7 +36,3 @@ Edit `config.json` to customize:
 - OpenCV
 - MediaPipe
 - NumPy, scikit-learn
-
-## License
-
-See LICENSE file for details.
