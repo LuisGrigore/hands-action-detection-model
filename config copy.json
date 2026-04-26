@@ -1,0 +1,137 @@
+{
+	"common": {
+		"actions": [
+			"NONE",
+			"A",
+			"B",
+			"C",
+			"D",
+			"E",
+			"F",
+			"G",
+			"H",
+			"I",
+			"J",
+			"K",
+			"L",
+			"M",
+			"N",
+			"O",
+			"P",
+			"Q",
+			"R",
+			"S",
+			"T",
+			"U",
+			"V",
+			"W",
+			"X",
+			"Y",
+			"Z"
+		],
+		"sequence_length": 20,
+		"data_path": "./dataset"
+	},
+	"collect_data": {
+		"n_sequences": 10,
+		"num_landmarks": 21,
+		"countdown": 2,
+		"model_path": "hand_landmarker.task",
+		"num_hands": 2,
+		"window_width": 1080,
+		"window_height": 920
+	},
+	"create_dataset": {
+		"output_path": "hand_gesture_dataset.npz",
+		"augmentation_counts": {
+			"NONE": 200,
+			"A": 100,
+			"B": 100,
+			"C": 100,
+			"D": 100,
+			"E": 100,
+			"F": 100,
+			"G": 100,
+			"H": 100,
+			"I": 100,
+			"J": 100,
+			"K": 100,
+			"L": 100,
+			"M": 100,
+			"N": 100,
+			"O": 100,
+			"P": 100,
+			"Q": 100,
+			"R": 100,
+			"S": 100,
+			"T": 100,
+			"U": 100,
+			"V": 100,
+			"W": 100,
+			"X": 100,
+			"Y": 100,
+			"Z": 100
+		},
+		"augmentation": {
+			"noise_std": 0.01,
+			"scale_range": [
+				0.9,
+				1.1
+			],
+			"dropout_prob": 0.3,
+			"temporal_prob": 0.5
+		}
+	},
+	"train_model": {
+		"dataset_path": "hand_gesture_dataset.npz",
+		"model_export_name": "hand_gesture_model.h5",
+		"hand_selection": "right",
+		"model_architecture": {
+			"type": "sequential",
+			"layers": [
+				{
+					"type": "TimeDistributed_Dense",
+					"units": 64,
+					"activation": "relu"
+				},
+				{
+					"type": "Dropout",
+					"rate": 0.3
+				},
+				{
+					"type": "GRU",
+					"units": 64,
+					"return_sequences": true
+				},
+				{
+					"type": "GRU",
+					"units": 64,
+					"return_sequences": false
+				},
+				{
+					"type": "Dense",
+					"units": 32,
+					"activation": "relu"
+				},
+				{
+					"type": "Dense",
+					"activation": "softmax"
+				}
+			]
+		},
+		"training": {
+			"epochs": 15,
+			"batch_size": 8,
+			"validation_split": 0.2,
+			"optimizer": "adam",
+			"loss": "categorical_crossentropy",
+			"metrics": [
+				"accuracy"
+			]
+		},
+		"data_split": {
+			"test_size": 0.15,
+			"stratify": true
+		}
+	}
+}

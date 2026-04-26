@@ -1,24 +1,18 @@
 {
 	"common": {
 		"actions": [
-			"A",
-			"B",
-			"C",
-			"D",
-			"E",
-			"F",
-			"G",
-			"H",
-			"I",
-			"J",
-			"K",
-			"none"
+			"ACTIVATE",
+			"SHEFT_LEFT",
+			"SHIFT_RIGHT",
+			"ENTER",
+			"DELETE",
+			"CANCEL"
 		],
 		"sequence_length": 20,
 		"data_path": "./dataset"
 	},
 	"collect_data": {
-		"n_sequences": 5,
+		"n_sequences": 10,
 		"num_landmarks": 21,
 		"countdown": 2,
 		"model_path": "hand_landmarker.task",
@@ -29,18 +23,32 @@
 	"create_dataset": {
 		"output_path": "hand_gesture_dataset.npz",
 		"augmentation_counts": {
-			"A": 50,
-			"B": 50,
-			"C": 50,
-			"D": 50,
-			"E": 50,
-			"F": 50,
-			"G": 50,
-			"H": 50,
-			"I": 50,
-			"J": 50,
-			"K": 50,
-			"none": 100
+			"A": 100,
+			"B": 100,
+			"C": 100,
+			"D": 100,
+			"E": 100,
+			"F": 100,
+			"G": 100,
+			"H": 100,
+			"I": 100,
+			"J": 100,
+			"K": 100,
+			"L": 100,
+			"M": 100,
+			"N": 100,
+			"O": 100,
+			"P": 100,
+			"Q": 100,
+			"R": 100,
+			"S": 100,
+			"T": 100,
+			"U": 100,
+			"V": 100,
+			"W": 100,
+			"X": 100,
+			"Y": 100,
+			"Z": 100
 		},
 		"augmentation": {
 			"noise_std": 0.01,
@@ -90,7 +98,7 @@
 			]
 		},
 		"training": {
-			"epochs": 15,
+			"epochs": 7,
 			"batch_size": 8,
 			"validation_split": 0.2,
 			"optimizer": "adam",
